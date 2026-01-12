@@ -45,7 +45,8 @@ export function useGameSocket() {
   const [lastWinner, setLastWinner] = useState<SpinResult | null>(null);
 
   useEffect(() => {
-    const socketUrl = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3000';
+    // Usar la URL actual del navegador para conectar al socket
+    const socketUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
     const newSocket = io(socketUrl, {
       reconnection: true,
       reconnectionDelay: 1000,

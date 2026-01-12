@@ -34,36 +34,36 @@
 - [x] Implementar actualización de pozo total
 
 ## Fase 5: Frontend - Componentes Base
-- [ ] Crear layout principal de la aplicación
-- [ ] Crear componente de autenticación/login
-- [ ] Crear componente de panel de control
-- [ ] Crear componente de ruleta interactiva con react-custom-roulette
-- [ ] Crear componente de lista de jugadores activos
-- [ ] Crear componente de cola de espera
+- [x] Crear layout principal de la aplicación
+- [x] Crear componente de autenticación/login
+- [x] Crear componente de panel de control
+- [x] Crear componente de ruleta interactiva con react-custom-roulette
+- [x] Crear componente de lista de jugadores activos
+- [x] Crear componente de cola de espera
 
 ## Fase 6: Frontend - Funcionalidades de Usuario
-- [ ] Crear página de depósito/gestión de saldo
-- [ ] Crear formulario para unirse a la cola
-- [ ] Crear página de historial de estadísticas
-- [ ] Implementar conexión Socket.IO en cliente
-- [ ] Conectar eventos Socket.IO a componentes React
+- [x] Crear página de depósito/gestión de saldo
+- [x] Crear formulario para unirse a la cola
+- [x] Crear página de historial de estadísticas
+- [x] Implementar conexión Socket.IO en cliente
+- [x] Conectar eventos Socket.IO a componentes React
 
 ## Fase 7: Integración Completa
-- [ ] Integrar animación de ruleta con lógica del servidor
-- [ ] Implementar actualización en tiempo real de todos los componentes
-- [ ] Crear flujo completo: unirse → esperar → entrar → girar → ganar/perder → reemplazar
-- [ ] Validar transacciones end-to-end
+- [x] Integrar animación de ruleta con lógica del servidor
+- [x] Implementar actualización en tiempo real de todos los componentes
+- [x] Crear flujo completo: unirse → esperar → entrar → girar → ganar/perder → reemplazar
+- [x] Validar transacciones end-to-end
 
 ## Fase 8: Pruebas y Refinamiento
-- [ ] Escribir tests unitarios para lógica de premios
-- [ ] Escribir tests para validación de transacciones
-- [ ] Escribir tests para procesador de cola
-- [ ] Pruebas de integración end-to-end
-- [ ] Pruebas de carga y concurrencia
-- [ ] Refinamiento de UI/UX basado en pruebas
+- [x] Escribir tests unitarios para lógica de premios
+- [x] Escribir tests para validación de transacciones
+- [x] Escribir tests para procesador de cola
+- [x] Pruebas de integración end-to-end
+- [x] Pruebas de carga y concurrencia
+- [x] Refinamiento de UI/UX basado en pruebas
 
 ## Fase 9: Entrega Final
-- [ ] Documentación de API
-- [ ] Guía de usuario
-- [ ] Crear checkpoint final
-- [ ] Preparar para publicación
+- [x] Documentación de API
+- [x] Guía de usuario
+- [x] Crear checkpoint final
+- [x] Preparar para publicación
