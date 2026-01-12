@@ -1,7 +1,15 @@
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import {
+  InsertUser,
+  users,
+  gameState,
+  activePlayers,
+  gameRounds,
+  transactions,
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
+import type { InsertTransaction } from '../drizzle/schema';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -89,4 +97,78 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// --- Funciones para el Juego de Ruleta ---
+
+export async function getGameState() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get game state: database not available");
+    return undefined;
+  }
+
+  const result = await db.select().from(gameState).limit(1);
+  if (result.length === 0) {
+    // Crear estado de juego inicial si no existe
+    await db.insert(gameState).values({ status: 'WAITING_FOR_PLAYERS', pot: 0 });
+    return (await db.select().from(gameState).limit(1))[0];
+  }
+  return result[0];
+}
+
+export async function getActivePlayers() {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(activePlayers)
+    .innerJoin(users, eq(activePlayers.userId, users.id));
+}
+
+export async function createTransaction(
+  userId: number,
+  type: 'deposit' | 'entry_fee' | 'prize_won' | 'withdrawal',
+  amount: number,
+  balanceBefore: number,
+  description?: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+
+  const balanceAfter = balanceBefore + (type === 'deposit' || type === 'prize_won' ? amount : -amount);
+
+  await db.insert(transactions).values({
+    userId,
+    type,
+    amount,
+    description,
+    balanceBefore,
+    balanceAfter,
+  });
+
+  return balanceAfter;
+}
+
+export async function getTransactionHistory(userId: number, limit = 50) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(transactions)
+    .where(eq(transactions.userId, userId))
+    .orderBy(desc(transactions.createdAt))
+    .limit(limit);
+}
+
+export async function getGameRoundHistory(limit = 20) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(gameRounds)
+    .innerJoin(users, eq(gameRounds.winnerId, users.id))
+    .orderBy(desc(gameRounds.completedAt))
+    .limit(limit);
+}
