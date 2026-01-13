@@ -38,13 +38,18 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
 
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
-    const radius = Math.min(centerX, centerY) - 10;
+    const radius = Math.min(centerX, centerY) - 20;
 
-    // Limpiar canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Limpiar canvas con fondo blanco
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Colores para los segmentos
-    const colors = ['#3b82f6', '#1e40af', '#1e3a8a', '#0c4a6e', '#0369a1', '#0284c7'];
+    // Colores vibrantes para los segmentos
+    const colors = [
+      '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A',
+      '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2',
+      '#F8B88B', '#ABEBC6'
+    ];
 
     // Dibujar segmentos
     const sliceAngle = (360 / players.length) * (Math.PI / 180);
@@ -60,45 +65,80 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       ctx.closePath();
       ctx.fillStyle = colors[index % colors.length];
       ctx.fill();
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
       ctx.stroke();
 
-      // Dibujar texto
+      // Borde externo oscuro
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+      ctx.strokeStyle = '#333333';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Dibujar nombre del jugador (más grande y visible)
       const textAngle = startAngle + sliceAngle / 2;
-      const textX = centerX + Math.cos(textAngle) * (radius * 0.7);
-      const textY = centerY + Math.sin(textAngle) * (radius * 0.7);
+      const textRadius = radius * 0.65;
+      const textX = centerX + Math.cos(textAngle) * textRadius;
+      const textY = centerY + Math.sin(textAngle) * textRadius;
 
       ctx.save();
       ctx.translate(textX, textY);
       ctx.rotate(textAngle + Math.PI / 2);
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 12px Arial';
+      
+      // Fondo blanco para el texto
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.fillRect(-35, -12, 70, 35);
+      
+      // Nombre
+      ctx.fillStyle = '#000000';
+      ctx.font = 'bold 13px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(player.name, 0, 0);
-      ctx.fillText(`R$ ${player.entryAmount}`, 0, 15);
+      ctx.fillText(player.name, 0, -3);
+      
+      // Monto de entrada
+      ctx.fillStyle = '#333333';
+      ctx.font = 'bold 11px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`R$ ${player.entryAmount}`, 0, 12);
+      
       ctx.restore();
     });
 
     // Dibujar círculo central
     ctx.beginPath();
-    ctx.arc(centerX, centerY, 30, 0, 2 * Math.PI);
-    ctx.fillStyle = '#fff';
+    ctx.arc(centerX, centerY, 45, 0, 2 * Math.PI);
+    ctx.fillStyle = '#333333';
     ctx.fill();
-    ctx.strokeStyle = '#333';
+    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 3;
     ctx.stroke();
 
-    // Dibujar indicador en la parte superior
+    // Texto central
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('RULETA', centerX, centerY - 12);
+    
+    ctx.font = 'bold 14px Arial';
+    ctx.fillStyle = '#FFD700';
+    ctx.fillText(`R$ ${pot}`, centerX, centerY + 15);
+
+    // Dibujar indicador (triángulo rojo en la parte superior)
     ctx.beginPath();
-    ctx.moveTo(centerX - 15, 10);
-    ctx.lineTo(centerX + 15, 10);
-    ctx.lineTo(centerX, 30);
+    ctx.moveTo(centerX, 5);
+    ctx.lineTo(centerX - 18, 28);
+    ctx.lineTo(centerX + 18, 28);
     ctx.closePath();
-    ctx.fillStyle = '#ef4444';
+    ctx.fillStyle = '#FF6B6B';
     ctx.fill();
-  }, [players, rotation]);
+    ctx.strokeStyle = '#333333';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }, [players, rotation, pot]);
 
   const handleSpinClick = () => {
     if (players.length < 2) {
@@ -109,30 +149,36 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     if (isAnimating || isSpinning) return;
 
     setIsAnimating(true);
+    setSelectedWinner(null);
     onSpinStart();
 
     // Seleccionar un ganador aleatorio
     const randomWinner = Math.floor(Math.random() * players.length);
-    setSelectedWinner(randomWinner);
 
     // Calcular rotación para que el ganador quede en la parte superior
-    const targetRotation = (randomWinner * 360) / players.length + 360 * 5;
+    // Cada segmento ocupa 360/players.length grados
+    const segmentAngle = 360 / players.length;
+    const targetRotation = (randomWinner * segmentAngle) + 360 * 5 + (Math.random() * segmentAngle * 0.5);
+    
     const duration = 3000 + Math.random() * 2000;
     const startTime = Date.now();
+    const startRotation = rotation;
 
     const animate = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
       
-      // Easing function para desaceleración
+      // Easing function para desaceleración suave
       const easeOut = 1 - Math.pow(1 - progress, 3);
       
-      setRotation(targetRotation * easeOut);
+      const newRotation = startRotation + (targetRotation - startRotation) * easeOut;
+      setRotation(newRotation % 360);
 
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
         setIsAnimating(false);
+        setSelectedWinner(randomWinner);
         onSpinFinish(randomWinner);
       }
     };
@@ -143,7 +189,8 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
   if (players.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 bg-card rounded-lg border border-border">
-        <p className="text-muted-foreground mb-4">Esperando jugadores...</p>
+        <Loader2 className="h-8 w-8 animate-spin mb-4" />
+        <p className="text-muted-foreground">Esperando jugadores...</p>
       </div>
     );
   }
@@ -153,17 +200,17 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-2">Ruleta del Juego</h2>
         <p className="text-lg text-muted-foreground">
-          Pozo Total: <span className="font-bold text-primary">R$ {pot}</span>
+          Pozo Total: <span className="font-bold text-green-600">R$ {pot}</span>
         </p>
         <p className="text-sm text-muted-foreground mt-2">Jugadores: {players.length}/10</p>
       </div>
 
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-md aspect-square">
         <canvas
           ref={canvasRef}
           width={400}
           height={400}
-          className="w-full border-4 border-border rounded-full"
+          className="w-full border-4 border-border rounded-full shadow-lg"
           style={{
             transform: `rotate(${rotation}deg)`,
             transition: isAnimating ? 'none' : 'transform 0.3s ease',
@@ -172,9 +219,10 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       </div>
 
       {selectedWinner !== null && (
-        <div className="text-center bg-green-50 border border-green-200 rounded-lg p-4 w-full max-w-xs">
-          <p className="text-sm text-green-700 font-semibold">Ganador!</p>
-          <p className="text-lg font-bold text-green-900">{players[selectedWinner].name}</p>
+        <div className="text-center bg-green-50 border-2 border-green-500 rounded-lg p-4 w-full max-w-xs animate-pulse">
+          <p className="text-sm text-green-700 font-semibold">¡GANADOR!</p>
+          <p className="text-2xl font-bold text-green-900">{players[selectedWinner].name}</p>
+          <p className="text-sm text-green-700 mt-2">Entrada: R$ {players[selectedWinner].entryAmount}</p>
         </div>
       )}
 
@@ -199,6 +247,26 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
           Se necesitan al menos 2 jugadores para girar
         </p>
       )}
+
+      {/* Lista de jugadores activos */}
+      <div className="w-full mt-4 pt-4 border-t border-border">
+        <h3 className="font-semibold mb-3 text-sm">Jugadores Activos:</h3>
+        <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
+          {players.map((player, index) => (
+            <div
+              key={player.id}
+              className={`p-2 rounded text-sm border ${
+                selectedWinner === index
+                  ? 'bg-green-100 border-green-500 font-semibold'
+                  : 'bg-muted border-border'
+              }`}
+            >
+              <div className="font-semibold">{index + 1}. {player.name}</div>
+              <div className="text-muted-foreground text-xs">R$ {player.entryAmount}</div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };

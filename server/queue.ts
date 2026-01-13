@@ -1,44 +1,29 @@
-import Queue from 'bull';
-import Redis from 'redis';
+/**
+ * Sistema de cola en memoria para jugadores en espera
+ * Esta versión no depende de Redis y funciona completamente en memoria
+ */
 
-// Configuración de Redis - usar URL si está disponible, sino configuración por defecto
-const redisUrl = process.env.REDIS_URL || `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || '6379'}`;
-
-// Cliente de Redis para operaciones generales
-export const redisClient = Redis.createClient({
-  url: redisUrl,
-});
-
-// Cola de espera para jugadores que quieren entrar a la ruleta
-export const waitingQueue = new Queue('waiting-queue', redisUrl);
-
-// Interfaz para un trabajo en la cola
 export interface WaitingQueueJob {
   userId: number;
   entryAmount: number; // Cantidad que pagó para entrar (5, 10, 15, 20)
   timestamp: number;
 }
 
+// Cola en memoria
+let queue: WaitingQueueJob[] = [];
+
 /**
  * Añade un jugador a la cola de espera
  */
 export async function addToQueue(userId: number, entryAmount: number) {
-  const job = await waitingQueue.add(
-    {
-      userId,
-      entryAmount,
-      timestamp: Date.now(),
-    } as WaitingQueueJob,
-    {
-      attempts: 3, // Reintentar hasta 3 veces si falla
-      backoff: {
-        type: 'exponential',
-        delay: 2000, // Esperar 2 segundos entre reintentos
-      },
-      removeOnComplete: true, // Eliminar el trabajo una vez completado
-    }
-  );
+  const job: WaitingQueueJob = {
+    userId,
+    entryAmount,
+    timestamp: Date.now(),
+  };
 
+  queue.push(job);
+  console.log(`[Queue] Jugador ${userId} añadido a la cola. Tamaño: ${queue.length}`);
   return job;
 }
 
@@ -46,42 +31,45 @@ export async function addToQueue(userId: number, entryAmount: number) {
  * Obtiene el siguiente jugador en la cola sin removerlo
  */
 export async function peekNextInQueue() {
-  const jobs = await waitingQueue.getJobs(['waiting'], 0, 0);
-  return jobs.length > 0 ? (jobs[0].data as WaitingQueueJob) : null;
+  return queue.length > 0 ? queue[0] : null;
 }
 
 /**
- * Obtiene el siguiente jugador en la cola y lo remueve
+ * Obtiene y remueve el siguiente jugador en la cola (FIFO)
  */
 export async function getNextFromQueue() {
-  const job = await waitingQueue.getNextJob();
-  if (job) {
-    await job.remove();
-    return job.data as WaitingQueueJob;
-  }
-  return null;
-}
-
-/**
- * Obtiene el número de jugadores esperando en la cola
- */
-export async function getQueueLength() {
-  return await waitingQueue.count();
-}
-
-/**
- * Limpia la cola (útil para testing o reset)
- */
-export async function clearQueue() {
-  await waitingQueue.clean(0, 'completed');
-  await waitingQueue.clean(0, 'failed');
-  await waitingQueue.clean(0, 'active');
+  if (queue.length === 0) return null;
+  const job = queue.shift();
+  console.log(`[Queue] Jugador ${job?.userId} removido de la cola. Tamaño restante: ${queue.length}`);
+  return job || null;
 }
 
 /**
  * Obtiene los primeros N jugadores en la cola sin removerlos
  */
-export async function peekQueue(limit = 10) {
-  const jobs = await waitingQueue.getJobs(['waiting'], 0, limit - 1);
-  return jobs.map((job) => job.data as WaitingQueueJob);
+export async function peekQueue(limit: number = 10) {
+  return queue.slice(0, limit);
+}
+
+/**
+ * Obtiene el tamaño actual de la cola
+ */
+export async function getQueueLength() {
+  return queue.length;
+}
+
+/**
+ * Limpia la cola (útil para pruebas)
+ */
+export async function clearQueue() {
+  const size = queue.length;
+  queue = [];
+  console.log(`[Queue] Cola limpiada. Se removieron ${size} jugadores.`);
+}
+
+/**
+ * Obtiene toda la cola
+ */
+export async function getAllQueue() {
+  return [...queue];
 }

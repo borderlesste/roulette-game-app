@@ -14,7 +14,7 @@ import { Loader2, LogOut } from 'lucide-react';
 
 export default function Home() {
   const { user, loading, isAuthenticated, logout } = useAuth();
-  const { gameState, isSpinning, startSpin, finishSpin, notifyPlayerJoinedQueue, requestGameState } = useGameSocket();
+  const { gameState, isSpinning, isConnected, startSpin, finishSpin, notifyPlayerJoinedQueue, requestGameState } = useGameSocket();
   const [balance, setBalance] = useState(0);
   const [userStats, setUserStats] = useState<any>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
@@ -30,6 +30,13 @@ export default function Home() {
       setBalance(statsQuery.data.balance);
     }
   }, [isAuthenticated, statsQuery.data]);
+
+  // Solicitar estado del juego cuando Socket.IO se conecta
+  useEffect(() => {
+    if (isConnected) {
+      requestGameState();
+    }
+  }, [isConnected, requestGameState]);
 
   const handleRefreshStats = async () => {
     setIsLoadingStats(true);
@@ -88,10 +95,17 @@ export default function Home() {
             <h1 className="text-2xl font-bold">Ruleta del Juego</h1>
             <p className="text-sm text-muted-foreground">Bienvenido, {user?.name}</p>
           </div>
-          <Button variant="outline" size="sm" onClick={logout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Salir
-          </Button>
+          <div className="flex items-center gap-4">
+            <div className={`text-xs font-semibold px-3 py-1 rounded-full ${
+              isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+            }`}>
+              {isConnected ? '🟢 Conectado' : '🔴 Desconectado'}
+            </div>
+            <Button variant="outline" size="sm" onClick={logout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Salir
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -100,7 +114,7 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Ruleta Principal */}
           <div className="lg:col-span-2">
-            {gameState ? (
+            {gameState && gameState.activePlayers ? (
               <RouletteWheel
                 players={gameState.activePlayers.map((p) => ({
                   id: p.userId,
@@ -113,8 +127,11 @@ export default function Home() {
                 pot={gameState.gameState.pot}
               />
             ) : (
-              <div className="flex items-center justify-center p-8 bg-card rounded-lg border border-border">
-                <Loader2 className="h-8 w-8 animate-spin" />
+              <div className="flex flex-col items-center justify-center p-12 bg-card rounded-lg border border-border">
+                <Loader2 className="h-8 w-8 animate-spin mb-4" />
+                <p className="text-muted-foreground">
+                  {isConnected ? 'Cargando ruleta...' : 'Conectando al servidor...'}
+                </p>
               </div>
             )}
           </div>
@@ -151,23 +168,21 @@ export default function Home() {
         </div>
 
         {/* Bottom Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-          {/* Jugadores Activos */}
-          {gameState && (
+        {gameState && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+            {/* Jugadores Activos */}
             <ActivePlayersList
               players={gameState.activePlayers}
               maxPlayers={10}
             />
-          )}
 
-          {/* Cola de Espera */}
-          {gameState && (
+            {/* Cola de Espera */}
             <WaitingQueue
               players={gameState.nextInQueue ? [gameState.nextInQueue] : []}
               queueLength={gameState.queueLength}
             />
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

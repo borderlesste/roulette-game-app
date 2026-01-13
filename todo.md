@@ -67,3 +67,12 @@
 - [x] Guía de usuario
 - [x] Crear checkpoint final
 - [x] Preparar para publicación
+
+
+## Bugs Reportados
+- [x] Ruleta no se muestra en la interfaz
+- [x] Investigar por qué gameState es null o no se carga
+- [x] Verificar conexión Socket.IO
+- [x] Ruleta no muestra nombres de participantes
+- [x] Crear datos de prueba para jugadores activos
+- [x] Mejorar componente RouletteWheel para mostrar nombres correctamente

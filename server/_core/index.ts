@@ -7,6 +7,10 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { initializeSocketIO } from "../socketHandler";
+import { getDb } from "../db";
+import { gameState } from "../../drizzle/schema";
+
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -30,6 +34,9 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+  
+  // Inicializar Socket.IO
+  initializeSocketIO(server);
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -49,6 +56,24 @@ async function startServer() {
   } else {
     serveStatic(app);
   }
+  
+  // Inicializar estado del juego si no existe
+  try {
+    const db = await getDb();
+    if (db) {
+      const existingState = await db.select().from(gameState).limit(1);
+      if (existingState.length === 0) {
+        console.log('[Server] Inicializando estado del juego...');
+        await db.insert(gameState).values({
+          status: 'WAITING_FOR_PLAYERS' as any,
+          pot: 0,
+          winnerId: null,
+        });
+      }
+    }
+  } catch (error) {
+    console.error('[Server] Error al inicializar estado del juego:', error);
+  }
 
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
@@ -59,6 +84,7 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    console.log(`[Socket.IO] Servidor listo para conexiones`);
   });
 }
 
