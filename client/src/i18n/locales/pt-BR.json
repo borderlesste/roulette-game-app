@@ -1,0 +1,113 @@
+{
+  "common": {
+    "appName": "Jogo da Roleta",
+    "welcome": "Bem-vindo",
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "delete": "Deletar",
+    "edit": "Editar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "logout": "Sair",
+    "login": "Entrar",
+    "language": "Idioma"
+  },
+  "dashboard": {
+    "title": "Painel de Controle",
+    "balance": "Seu Saldo",
+    "statistics": "Suas Estatísticas",
+    "quickActions": "Ações Rápidas",
+    "deposit": "💰 Depositar",
+    "withdraw": "🏦 Sacar",
+    "profile": "👤 Meu Perfil",
+    "liveGame": "Jogo ao Vivo",
+    "gamesPlayed": "Jogos Jogados",
+    "totalWinnings": "Ganhos Totais",
+    "status": "Status"
+  },
+  "profile": {
+    "title": "Meu Perfil",
+    "cpfCnpj": "CPF/CNPJ",
+    "phone": "Telefone",
+    "pixKey": "Chave PIX",
+    "pixKeyType": "Tipo de Chave PIX",
+    "updateProfile": "Atualizar Perfil",
+    "profileUpdated": "Perfil atualizado com sucesso",
+    "invalidCpf": "CPF inválido",
+    "invalidCnpj": "CNPJ inválido",
+    "invalidPhone": "Telefone inválido"
+  },
+  "deposit": {
+    "title": "Depositar Fundos",
+    "amount": "Valor (R$)",
+    "generateQr": "Gerar QR PIX",
+    "scanQr": "Escaneie este código QR com seu banco:",
+    "copyCode": "Ou copie e cole este código:",
+    "copied": "✓ Copiado",
+    "copy": "Copiar",
+    "depositInfo": "O depósito será creditado automaticamente após confirmar o pagamento em seu banco.",
+    "generating": "Gerando QR..."
+  },
+  "withdrawal": {
+    "title": "Sacar Fundos",
+    "amount": "Valor (R$)",
+    "pixAddressKey": "Chave PIX",
+    "pixKeyType": "Tipo de Chave PIX",
+    "requestWithdrawal": "Solicitar Saque",
+    "processing": "Processando...",
+    "maxAvailable": "Máximo disponível: R$",
+    "warning": "⚠️ O saldo será debitado imediatamente. A transferência será processada em 1-2 minutos.",
+    "success": "¡Saque Solicitado!",
+    "successMessage": "Seu saque foi processado. Você receberá os fundos em sua conta PIX em 1-2 minutos.",
+    "invalidPixKey": "Chave PIX inválida",
+    "insufficientBalance": "Saldo insuficiente para o saque."
+  },
+  "notifications": {
+    "title": "Notificações",
+    "noNotifications": "Sem notificações",
+    "depositReceived": "💰 Depósito Recebido",
+    "withdrawalProcessed": "🏦 Saque Processado",
+    "withdrawalFailed": "⚠️ Saque Falhou",
+    "paymentReminder": "⏰ Lembrete de Pagamento",
+    "markAsRead": "Marcar como lido",
+    "markAllAsRead": "Marcar tudo como lido",
+    "new": "Novo"
+  },
+  "game": {
+    "title": "Jogo da Roleta",
+    "subtitle": "Bem-vindo ao melhor jogo de roleta online",
+    "joinQueue": "Entrar na Fila",
+    "entryAmount": "Valor de Entrada",
+    "queuePosition": "Posição na Fila",
+    "activePlayer": "Jogador Ativo",
+    "waiting": "Aguardando",
+    "playing": "Jogando",
+    "inactive": "Inativo",
+    "winner": "Vencedor",
+    "prize": "Prêmio",
+    "pot": "Pote",
+    "spin": "Girar",
+    "gameHistory": "Histórico de Jogos"
+  },
+  "errors": {
+    "userNotFound": "Usuário não encontrado",
+    "insufficientBalance": "Saldo insuficiente",
+    "invalidInput": "Entrada inválida",
+    "networkError": "Erro de rede",
+    "serverError": "Erro do servidor",
+    "unauthorized": "Não autorizado",
+    "profileIncomplete": "Você deve completar seu perfil com CPF/CNPJ antes de fazer depósitos"
+  },
+  "validation": {
+    "required": "Este campo é obrigatório",
+    "minLength": "Mínimo {{min}} caracteres",
+    "maxLength": "Máximo {{max}} caracteres",
+    "invalidEmail": "Email inválido",
+    "invalidPhone": "Telefone inválido"
+  }
+}
