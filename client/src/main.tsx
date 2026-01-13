@@ -7,6 +7,8 @@ import superjson from "superjson";
 import App from "./App";
 import { getLoginUrl } from "./const";
 import "./index.css";
+import './i18n/config'; // Importar configuración de i18n
+// i18n se inicializa automáticamente al importar config.ts
 
 const queryClient = new QueryClient();
 

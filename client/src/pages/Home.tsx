@@ -7,6 +7,7 @@ import { WaitingQueue } from '@/components/WaitingQueue';
 import { BalanceCard } from '@/components/BalanceCard';
 import { JoinQueueForm } from '@/components/JoinQueueForm';
 import { useGameSocket } from '@/hooks/useGameSocket';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
 import { getLoginUrl } from '@/const';
@@ -96,6 +97,7 @@ export default function Home() {
             <p className="text-sm text-muted-foreground">Bienvenido, {user?.name}</p>
           </div>
           <div className="flex items-center gap-4">
+            <LanguageSwitcher />
             <div className={`text-xs font-semibold px-3 py-1 rounded-full ${
               isConnected ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
             }`}>
