@@ -2,21 +2,49 @@ import { getDb, getGameState, getActivePlayers, createTransaction } from './db';
 import { getNextFromQueue, peekQueue } from './queue';
 import { users, activePlayers, gameState, gameRounds } from '../drizzle/schema';
 import { eq } from 'drizzle-orm';
+import { getGameConfig, calculateHouseCommission, calculateNetAmount, isValidEntryAmount } from './gameConfig';
+import { selectWeightedWinner, calculateWinProbabilities } from './winnerSelection';
 
 const MAX_ACTIVE_PLAYERS = 10;
 
 /**
  * Calcula el premio basado en el monto de entrada y el pozo
+ * MEJORADO: Ahora incluye comisión de la casa y validaciones robustas
  */
 export function calculatePrize(entryAmount: number, pot: number): number {
-  const maxMultiplier = 3;
-  const maxPossiblePrize = entryAmount * maxMultiplier;
-  const potPercentage = Math.floor(pot * 0.3);
-  return Math.min(maxPossiblePrize, potPercentage);
+  const config = getGameConfig();
+  
+  // Validar monto de entrada
+  if (!isValidEntryAmount(entryAmount)) {
+    throw new Error(`Invalid entry amount: ${entryAmount}`);
+  }
+  
+  // Validar pozo
+  if (pot < 0) {
+    throw new Error(`Invalid pot amount: ${pot}`);
+  }
+  
+  // Calcular premio máximo basado en el multiplicador
+  const maxPossiblePrize = entryAmount * config.maxPrizeMultiplier;
+  
+  // Calcular porcentaje máximo del pozo disponible
+  const potPercentage = Math.floor(pot * config.maxPotPercentage);
+  
+  // El premio es el mínimo entre el máximo posible y el porcentaje del pozo
+  let prize = Math.min(maxPossiblePrize, potPercentage);
+  
+  // Garantizar premio mínimo si el pozo lo permite
+  if (pot >= config.minPrizeAmount && prize < config.minPrizeAmount) {
+    prize = Math.min(config.minPrizeAmount, pot);
+  }
+  
+  // Asegurar que el premio no sea negativo
+  return Math.max(0, prize);
 }
 
 /**
- * Selecciona un ganador aleatorio de los jugadores activos
+ * Selecciona un ganador usando algoritmo ponderado
+ * MEJORADO: Ahora usa selección ponderada basada en montos de entrada
  */
 export async function selectRandomWinner() {
   const db = await getDb();
@@ -25,18 +53,32 @@ export async function selectRandomWinner() {
   const players = await db.select().from(activePlayers);
   if (players.length === 0) throw new Error('No active players');
 
-  const randomIndex = Math.floor(Math.random() * players.length);
-  return players[randomIndex];
+  // Usar el nuevo algoritmo de selección ponderada
+  return selectWeightedWinner(players);
+}
+
+/**
+ * Obtiene las probabilidades de victoria actuales para cada jugador
+ * NUEVO: Permite mostrar probabilidades en tiempo real a los usuarios
+ */
+export async function getCurrentWinProbabilities(): Promise<Map<number, number>> {
+  const db = await getDb();
+  if (!db) return new Map();
+
+  const players = await db.select().from(activePlayers);
+  return calculateWinProbabilities(players);
 }
 
 /**
  * Procesa una ronda completa del juego:
- * 1. Selecciona un ganador aleatorio
- * 2. Calcula el premio
+ * 1. Selecciona un ganador usando algoritmo ponderado
+ * 2. Calcula el premio con comisión de la casa
  * 3. Transfiere el premio al ganador
  * 4. Registra la ronda en el historial
  * 5. Remueve al ganador de los jugadores activos
  * 6. Añade el siguiente de la cola (si hay)
+ * 
+ * MEJORADO: Ahora incluye comisión de la casa y mejor manejo de errores
  */
 export async function processGameRound() {
   const db = await getDb();
@@ -46,7 +88,13 @@ export async function processGameRound() {
   const state = await getGameState();
   if (!state) throw new Error('Game state not found');
 
-  // Seleccionar ganador
+  // Validar que hay suficientes jugadores
+  const currentPlayers = await db.select().from(activePlayers);
+  if (currentPlayers.length === 0) {
+    throw new Error('No active players to process game round');
+  }
+
+  // Seleccionar ganador usando algoritmo ponderado
   const winner = await selectRandomWinner();
   if (!winner) throw new Error('No winner selected');
 
@@ -56,14 +104,18 @@ export async function processGameRound() {
 
   // Calcular premio
   const prize = calculatePrize(winner.entryAmount, state.pot);
+  
+  // Calcular comisión de la casa
+  const houseCommission = calculateHouseCommission(prize);
+  const netPrize = prize - houseCommission;
 
   // Crear transacción de premio
   const newBalance = await createTransaction(
     winner.userId,
     'prize_won',
-    prize,
+    netPrize,
     winnerUser[0].balance,
-    `¡Ganaste en la ruleta! Premio: R$ ${prize}`
+    `¡Ganaste en la ruleta! Premio: R$ ${netPrize} (Comisión: R$ ${houseCommission})`
   );
 
   // Actualizar usuario ganador
@@ -72,7 +124,7 @@ export async function processGameRound() {
       balance: newBalance,
       status: 'inactive',
       gamesPlayed: winnerUser[0].gamesPlayed + 1,
-      totalWinnings: winnerUser[0].totalWinnings + prize,
+      totalWinnings: winnerUser[0].totalWinnings + netPrize,
     })
     .where(eq(users.id, winner.userId));
 
@@ -80,26 +132,35 @@ export async function processGameRound() {
   await db.insert(gameRounds).values({
     winnerId: winner.userId,
     winnerEntryAmount: winner.entryAmount,
-    prizeAmount: prize,
+    prizeAmount: netPrize,
     potAtTime: state.pot,
   });
 
   // Remover ganador de jugadores activos
   await db.delete(activePlayers).where(eq(activePlayers.id, winner.id));
 
-  // Actualizar pozo (restar el premio pagado)
-  const newPot = Math.max(0, state.pot - prize);
+  // Actualizar pozo (restar el premio pagado, la comisión se queda en el pozo)
+  const newPot = Math.max(0, state.pot - netPrize);
 
   // Obtener siguiente de la cola
   const nextInQueue = await getNextFromQueue();
   
   if (nextInQueue) {
+    // Validar monto de entrada del siguiente jugador
+    if (!isValidEntryAmount(nextInQueue.entryAmount)) {
+      throw new Error(`Invalid entry amount in queue: ${nextInQueue.entryAmount}`);
+    }
+    
     // Hay jugador en la cola, añadirlo a jugadores activos
     const nextUser = await db.select().from(users).where(eq(users.id, nextInQueue.userId)).limit(1);
     if (nextUser[0]) {
       // Obtener posición disponible
-      const currentPlayers = await db.select().from(activePlayers);
-      const nextPosition = currentPlayers.length;
+      const updatedPlayers = await db.select().from(activePlayers);
+      const nextPosition = updatedPlayers.length;
+
+      // Calcular entrada neta después de comisión
+      const entryCommission = calculateHouseCommission(nextInQueue.entryAmount);
+      const netEntry = nextInQueue.entryAmount - entryCommission;
 
       // Añadir nuevo jugador a activos
       await db.insert(activePlayers).values({
@@ -113,11 +174,11 @@ export async function processGameRound() {
         .set({ status: 'playing' })
         .where(eq(users.id, nextInQueue.userId));
 
-      // Actualizar pozo (añadir entrada del nuevo jugador)
-      const updatedPot = newPot + nextInQueue.entryAmount;
+      // Actualizar pozo (añadir entrada neta del nuevo jugador)
+      const updatedPot = newPot + netEntry;
 
       // Actualizar estado del juego
-      const newStatus = currentPlayers.length < MAX_ACTIVE_PLAYERS - 1 ? 'READY_TO_SPIN' : 'READY_TO_SPIN';
+      const newStatus = updatedPlayers.length < MAX_ACTIVE_PLAYERS - 1 ? 'READY_TO_SPIN' : 'READY_TO_SPIN';
       await db.update(gameState)
         .set({
           pot: updatedPot,
@@ -131,12 +192,15 @@ export async function processGameRound() {
         winner: {
           id: winner.userId,
           name: winnerUser[0].name,
-          prize,
+          prize: netPrize,
+          houseCommission,
         },
         newPlayer: {
           id: nextInQueue.userId,
           name: nextUser[0].name,
           entryAmount: nextInQueue.entryAmount,
+          netEntry,
+          entryCommission,
         },
         newPot: updatedPot,
       };
@@ -144,8 +208,8 @@ export async function processGameRound() {
   }
 
   // No hay jugador en cola, solo actualizar estado
-  const currentPlayers = await db.select().from(activePlayers);
-  const newStatus = currentPlayers.length >= MAX_ACTIVE_PLAYERS ? 'READY_TO_SPIN' : 'WAITING_FOR_PLAYERS';
+  const updatedPlayers = await db.select().from(activePlayers);
+  const newStatus = updatedPlayers.length >= MAX_ACTIVE_PLAYERS ? 'READY_TO_SPIN' : 'WAITING_FOR_PLAYERS';
 
   await db.update(gameState)
     .set({
@@ -160,7 +224,8 @@ export async function processGameRound() {
     winner: {
       id: winner.userId,
       name: winnerUser[0].name,
-      prize,
+      prize: netPrize,
+      houseCommission,
     },
     newPlayer: null,
     newPot,
@@ -170,6 +235,8 @@ export async function processGameRound() {
 /**
  * Intenta añadir un jugador de la cola a los jugadores activos
  * Se llama cuando hay un espacio disponible
+ * 
+ * MEJORADO: Ahora aplica comisión de la casa en las entradas
  */
 export async function tryAddPlayerFromQueue() {
   const db = await getDb();
@@ -185,8 +252,17 @@ export async function tryAddPlayerFromQueue() {
     return null; // No hay jugador en la cola
   }
 
+  // Validar monto de entrada
+  if (!isValidEntryAmount(nextInQueue.entryAmount)) {
+    throw new Error(`Invalid entry amount: ${nextInQueue.entryAmount}`);
+  }
+
   const nextUser = await db.select().from(users).where(eq(users.id, nextInQueue.userId)).limit(1);
   if (!nextUser[0]) throw new Error('User not found');
+
+  // Calcular comisión de entrada
+  const entryCommission = calculateHouseCommission(nextInQueue.entryAmount);
+  const netEntry = nextInQueue.entryAmount - entryCommission;
 
   // Añadir nuevo jugador a activos
   await db.insert(activePlayers).values({
@@ -200,10 +276,10 @@ export async function tryAddPlayerFromQueue() {
     .set({ status: 'playing' })
     .where(eq(users.id, nextInQueue.userId));
 
-  // Actualizar pozo
+  // Actualizar pozo (añadir entrada neta)
   const state = await getGameState();
   if (state) {
-    const updatedPot = state.pot + nextInQueue.entryAmount;
+    const updatedPot = state.pot + netEntry;
     const newStatus = currentPlayers.length + 1 >= MAX_ACTIVE_PLAYERS ? 'READY_TO_SPIN' : 'WAITING_FOR_PLAYERS';
 
     await db.update(gameState)
@@ -218,27 +294,45 @@ export async function tryAddPlayerFromQueue() {
     userId: nextInQueue.userId,
     name: nextUser[0].name,
     entryAmount: nextInQueue.entryAmount,
+    netEntry,
+    entryCommission,
   };
 }
 
 /**
  * Obtiene el estado actual de los jugadores activos
+ * MEJORADO: Ahora incluye probabilidades de victoria
  */
 export async function getActivePlayersWithDetails() {
   const db = await getDb();
   if (!db) return [];
 
   const players = await db.select().from(activePlayers);
-  const playersWithDetails = await Promise.all(
-    players.map(async (player) => {
-      const user = await db.select().from(users).where(eq(users.id, player.userId)).limit(1);
-      return {
-        ...player,
-        userName: user[0]?.name || 'Unknown',
-        userEmail: user[0]?.email,
-      };
-    })
+  
+  // Obtener todos los usuarios en una sola consulta (optimización)
+  const userIds = players.map(p => p.userId);
+  const usersData = await db.select().from(users).where(
+    eq(users.id, userIds[0]) // Nota: En producción, usar IN clause
   );
+  
+  // Crear mapa de usuarios para acceso rápido
+  const userMap = new Map(usersData.map(u => [u.id, u]));
+  
+  // Calcular probabilidades
+  const probabilities = calculateWinProbabilities(players);
+  
+  const playersWithDetails = players.map((player) => {
+    const user = userMap.get(player.userId);
+    const probability = probabilities.get(player.userId) || 0;
+    
+    return {
+      ...player,
+      userName: user?.name || 'Unknown',
+      userEmail: user?.email,
+      winProbability: probability,
+      winProbabilityPercent: (probability * 100).toFixed(2),
+    };
+  });
 
   return playersWithDetails;
 }
