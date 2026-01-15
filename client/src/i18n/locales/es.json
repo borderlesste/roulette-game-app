@@ -76,7 +76,13 @@
     "paymentReminder": "⏰ Recordatorio de Pago",
     "markAsRead": "Marcar como leído",
     "markAllAsRead": "Marcar todo como leído",
-    "new": "Nuevo"
+    "new": "Nuevo",
+    "won": "ganó",
+    "congratulations": "¡Felicidades!",
+    "joined_game": "entró a la ruleta",
+    "joined_queue": "se unió a la cola de espera",
+    "error_occurred": "Ocurrió un error",
+    "waiting_for_players": "Esperando más jugadores..."
   },
   "game": {
     "title": "Juego de Ruleta",

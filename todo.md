@@ -76,3 +76,30 @@
 - [x] Ruleta no muestra nombres de participantes
 - [x] Crear datos de prueba para jugadores activos
 - [x] Mejorar componente RouletteWheel para mostrar nombres correctamente
+
+
+## Fase 10: Funcionalidad de Giro Automático
+- [x] Implementar lógica de giro en el backend (seleccionar ganador, calcular premio)
+- [x] Crear endpoint tRPC para iniciar giro
+- [x] Crear componente de botón "Girar Ruleta" con validaciones
+- [x] Implementar animación de giro en la ruleta
+- [x] Emitir eventos Socket.IO para actualizar todos los clientes
+- [x] Reemplazar ganador automáticamente con siguiente en cola
+- [x] Escribir tests para la lógica de giro
+
+## Fase 11: Panel de Historial de Rondas
+- [x] Crear componente GameRoundsHistory
+- [x] Implementar endpoint tRPC para obtener historial de rondas
+- [x] Mostrar últimas 10 rondas con ganador, premio y pozo
+- [x] Añadir filtros por fecha y usuario
+- [x] Implementar paginación si hay muchas rondas
+- [x] Integrar con Socket.IO para actualizaciones en tiempo real
+
+## Fase 12: Sistema de Notificaciones Multilingües
+- [x] Crear componente NotificationCenter
+- [x] Implementar eventos de notificación en Socket.IO
+- [x] Crear traducciones para mensajes de notificación
+- [x] Implementar toast notifications con sonido opcional
+- [x] Notificar cuando alguien gana
+- [x] Notificar cuando alguien entra a la ruleta
+- [x] Notificar cuando alguien se une a la cola

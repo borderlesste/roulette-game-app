@@ -76,7 +76,13 @@
     "paymentReminder": "⏰ Lembrete de Pagamento",
     "markAsRead": "Marcar como lido",
     "markAllAsRead": "Marcar tudo como lido",
-    "new": "Novo"
+    "new": "Novo",
+    "won": "ganhou",
+    "congratulations": "Parabéns!",
+    "joined_game": "entrou no jogo",
+    "joined_queue": "entrou na fila de espera",
+    "error_occurred": "Ocorreu um erro",
+    "waiting_for_players": "Aguardando mais jogadores..."
   },
   "game": {
     "title": "Jogo da Roleta",
