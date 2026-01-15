@@ -4,7 +4,8 @@ import { getEmailTranslation } from './translationService';
 
 type Language = 'es' | 'pt-BR';
 
-const resend = new Resend(ENV.RESEND_API_KEY);
+// Email service - resendApiKey es opcional
+const resend = ENV.resendApiKey ? new Resend(ENV.resendApiKey) : null;
 const FROM_EMAIL = 'noreply@roulettegame.com';
 
 /**
@@ -167,15 +168,15 @@ export async function sendDepositEmail(
   language: Language = 'es'
 ): Promise<void> {
   try {
-    if (!ENV.RESEND_API_KEY) {
-      console.warn('[Email] RESEND_API_KEY no configurada, saltando envío de email');
+    if (!ENV.resendApiKey || !resend) {
+      console.warn('[Email] resendApiKey no configurada, saltando envío de email');
       return;
     }
 
     const subject = getEmailTranslation('deposit_received_subject', language, { amount });
     const html = getDepositEmailTemplate(userName, amount, newBalance, language);
 
-    await resend.emails.send({
+    await resend!.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject,
@@ -200,15 +201,15 @@ export async function sendWithdrawalEmail(
   language: Language = 'es'
 ): Promise<void> {
   try {
-    if (!ENV.RESEND_API_KEY) {
-      console.warn('[Email] RESEND_API_KEY no configurada, saltando envío de email');
+    if (!ENV.resendApiKey || !resend) {
+      console.warn('[Email] resendApiKey no configurada, saltando envío de email');
       return;
     }
 
     const subject = getEmailTranslation('withdrawal_processed_subject', language, { amount });
     const html = getWithdrawalEmailTemplate(userName, amount, pixKey, language);
 
-    await resend.emails.send({
+    await resend!.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject,
@@ -233,15 +234,15 @@ export async function sendWithdrawalFailedEmail(
   language: Language = 'es'
 ): Promise<void> {
   try {
-    if (!ENV.RESEND_API_KEY) {
-      console.warn('[Email] RESEND_API_KEY no configurada, saltando envío de email');
+    if (!ENV.resendApiKey || !resend) {
+      console.warn('[Email] resendApiKey no configurada, saltando envío de email');
       return;
     }
 
     const subject = getEmailTranslation('withdrawal_failed_subject', language, { amount });
     const html = getWithdrawalFailedEmailTemplate(userName, amount, reason, language);
 
-    await resend.emails.send({
+    await resend!.emails.send({
       from: FROM_EMAIL,
       to: email,
       subject,
