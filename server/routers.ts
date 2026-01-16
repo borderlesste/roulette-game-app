@@ -5,6 +5,9 @@ import { publicProcedure, router } from "./_core/trpc";
 import { gameRouter } from "./game";
 import { gameControlRouter } from "./gameControl";
 import { spinProcedure, getSpinStateProcedure, getGameRoundsHistoryProcedure } from "./spinProcedure";
+import { statsRouter } from "./statsRouter";
+import { bonusRouter } from "./bonusRouter";
+import { spectatorRouter } from "./spectatorRouter";
 
 export const appRouter = router({
   system: systemRouter,
@@ -25,6 +28,9 @@ export const appRouter = router({
     getState: getSpinStateProcedure,
     getHistory: getGameRoundsHistoryProcedure,
   }),
+  stats: statsRouter,
+  bonus: bonusRouter,
+  spectator: spectatorRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -15,6 +15,13 @@
       "when": 1768203215984,
       "tag": "0001_military_aaron_stack",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1768546552188,
+      "tag": "0002_complete_franklin_richards",
+      "breakpoints": true
     }
   ]
 }

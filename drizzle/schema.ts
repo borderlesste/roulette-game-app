@@ -91,3 +91,67 @@ export const transactions = mysqlTable("transactions", {
 
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = typeof transactions.$inferInsert;
+
+/**
+ * Tabla para rastrear estadísticas diarias de cada usuario.
+ */
+export const userDailyStats = mysqlTable("userDailyStats", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id),
+  date: varchar("date", { length: 10 }).notNull(),
+  gamesPlayed: int("gamesPlayed").default(0).notNull(),
+  gamesWon: int("gamesWon").default(0).notNull(),
+  totalWinnings: int("totalWinnings").default(0).notNull(),
+  totalLosses: int("totalLosses").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserDailyStats = typeof userDailyStats.$inferSelect;
+export type InsertUserDailyStats = typeof userDailyStats.$inferInsert;
+
+/**
+ * Tabla para gestionar bonificaciones y promociones.
+ */
+export const bonuses = mysqlTable("bonuses", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id),
+  type: mysqlEnum("type", ["welcome_bonus", "streak_bonus", "hourly_multiplier", "referral_bonus"]).notNull(),
+  amount: int("amount").notNull(),
+  multiplier: int("multiplier").default(1).notNull(),
+  description: text("description"),
+  isActive: int("isActive").default(1).notNull(),
+  expiresAt: timestamp("expiresAt"),
+  appliedAt: timestamp("appliedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Bonus = typeof bonuses.$inferSelect;
+export type InsertBonus = typeof bonuses.$inferInsert;
+
+/**
+ * Tabla para rastrear espectadores conectados.
+ */
+export const spectators = mysqlTable("spectators", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id),
+  socketId: varchar("socketId", { length: 64 }).notNull(),
+  connectedAt: timestamp("connectedAt").defaultNow().notNull(),
+  disconnectedAt: timestamp("disconnectedAt"),
+});
+
+export type Spectator = typeof spectators.$inferSelect;
+export type InsertSpectator = typeof spectators.$inferInsert;
+
+/**
+ * Tabla para mensajes del chat de espectadores.
+ */
+export const spectatorMessages = mysqlTable("spectatorMessages", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id),
+  message: text("message").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SpectatorMessage = typeof spectatorMessages.$inferSelect;
+export type InsertSpectatorMessage = typeof spectatorMessages.$inferInsert;

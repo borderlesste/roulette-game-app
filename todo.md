@@ -103,3 +103,28 @@
 - [x] Notificar cuando alguien gana
 - [x] Notificar cuando alguien entra a la ruleta
 - [x] Notificar cuando alguien se une a la cola
+
+
+## Fase 13: Panel de Estadísticas del Usuario
+- [x] Crear modelo de base de datos para estadísticas diarias
+- [x] Implementar endpoint tRPC para obtener estadísticas del usuario
+- [x] Crear componente StatsChart con gráficos de ganancias/pérdidas
+- [x] Implementar gráfico de tasa de victoria
+- [x] Crear tabla comparativa con otros jugadores
+- [x] Integrar con Socket.IO para actualizaciones en vivo
+
+## Fase 14: Sistema de Bonificaciones y Promociones
+- [x] Crear modelo de base de datos para bonificaciones
+- [x] Implementar lógica de bonos de bienvenida
+- [x] Crear multiplicadores de pozo en horas específicas
+- [x] Implementar recompensas por racha de victorias
+- [x] Crear endpoint tRPC para aplicar bonificaciones
+- [x] Añadir notificaciones cuando se activan bonos
+
+## Fase 15: Modo Espectador
+- [x] Crear rol de espectador en la base de datos
+- [x] Implementar autenticación para espectadores
+- [x] Crear componente de vista espectador
+- [x] Implementar chat en tiempo real con Socket.IO
+- [x] Crear lista de espectadores conectados
+- [x] Añadir funcionalidad para que espectadores se unan a la cola
