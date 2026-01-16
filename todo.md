@@ -128,3 +128,11 @@
 - [x] Implementar chat en tiempo real con Socket.IO
 - [x] Crear lista de espectadores conectados
 - [x] Añadir funcionalidad para que espectadores se unan a la cola
+
+
+## Bugs de Ruleta a Corregir
+- [x] Revisar física de animación de giro
+- [x] Verificar que la ruleta se detiene en el ganador correcto
+- [x] Mejorar suavidad de la animación
+- [x] Validar cálculo de ángulo de rotación
+- [x] Asegurar que el ganador seleccionado coincida con el segmento final

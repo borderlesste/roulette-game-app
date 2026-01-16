@@ -55,7 +55,9 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     const sliceAngle = (360 / players.length) * (Math.PI / 180);
 
     players.forEach((player, index) => {
-      const startAngle = (index * 360) / players.length * (Math.PI / 180) + (rotation * Math.PI / 180);
+      // Calcular ángulo de inicio considerando la rotación actual
+      const baseAngle = (index * 360) / players.length;
+      const startAngle = (baseAngle * Math.PI / 180) + (rotation * Math.PI / 180);
       const endAngle = startAngle + sliceAngle;
 
       // Dibujar segmento
@@ -155,12 +157,20 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
     // Seleccionar un ganador aleatorio
     const randomWinner = Math.floor(Math.random() * players.length);
 
-    // Calcular rotación para que el ganador quede en la parte superior
+    // CORRECCIÓN: Calcular rotación correctamente
+    // El indicador está en la parte superior (0 grados)
+    // Queremos que el ganador esté en la parte superior al final
     // Cada segmento ocupa 360/players.length grados
     const segmentAngle = 360 / players.length;
-    const targetRotation = (randomWinner * segmentAngle) + 360 * 5 + (Math.random() * segmentAngle * 0.5);
     
-    const duration = 3000 + Math.random() * 2000;
+    // El ganador está en la posición: randomWinner * segmentAngle
+    // Para que esté en la parte superior (indicador), necesitamos rotar:
+    // targetRotation = (randomWinner * segmentAngle) + múltiples vueltas
+    const fullRotations = 5 + Math.floor(Math.random() * 3); // 5-7 vueltas completas
+    const randomOffset = Math.random() * 0.3; // Pequeña variación para que sea más realista
+    const targetRotation = (randomWinner * segmentAngle) + (360 * fullRotations) + randomOffset;
+    
+    const duration = 4000 + Math.random() * 2000; // 4-6 segundos
     const startTime = Date.now();
     const startRotation = rotation;
 
@@ -168,15 +178,21 @@ export const RouletteWheel: React.FC<RouletteWheelProps> = ({
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
       
-      // Easing function para desaceleración suave
+      // Easing function: comienza rápido, desacelera hacia el final (ease-out cubic)
       const easeOut = 1 - Math.pow(1 - progress, 3);
       
       const newRotation = startRotation + (targetRotation - startRotation) * easeOut;
-      setRotation(newRotation % 360);
+      
+      // Normalizar rotación a 0-360 para evitar números muy grandes
+      const normalizedRotation = newRotation % 360;
+      setRotation(normalizedRotation);
 
       if (progress < 1) {
         requestAnimationFrame(animate);
       } else {
+        // Asegurar que la rotación final sea exacta
+        const finalRotation = targetRotation % 360;
+        setRotation(finalRotation);
         setIsAnimating(false);
         setSelectedWinner(randomWinner);
         onSpinFinish(randomWinner);
