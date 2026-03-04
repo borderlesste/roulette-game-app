@@ -136,3 +136,13 @@
 - [x] Mejorar suavidad de la animación
 - [x] Validar cálculo de ángulo de rotación
 - [x] Asegurar que el ganador seleccionado coincida con el segmento final
+
+
+## Fase 16: Historial de Últimos 5 Ganadores en Tiempo Real
+- [x] Crear endpoint tRPC para obtener últimos ganadores
+- [x] Crear componente RecentWinnersLive
+- [x] Integrar Socket.IO para actualizaciones en vivo
+- [x] Mostrar nombre, premio y hora exacta
+- [x] Añadir animación de entrada para nuevos ganadores
+- [x] Integrar en la página Home
+- [x] Crear tests unitarios para winnersRouter (15 tests pasando)

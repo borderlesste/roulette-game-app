@@ -8,6 +8,7 @@ import { BalanceCard } from '@/components/BalanceCard';
 import { JoinQueueForm } from '@/components/JoinQueueForm';
 import { useGameSocket } from '@/hooks/useGameSocket';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { RecentWinnersLive } from '@/components/RecentWinnersLive';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
 import { getLoginUrl } from '@/const';
@@ -171,18 +172,27 @@ export default function Home() {
 
         {/* Bottom Row */}
         {gameState && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
             {/* Jugadores Activos */}
-            <ActivePlayersList
-              players={gameState.activePlayers}
-              maxPlayers={10}
-            />
+            <div>
+              <ActivePlayersList
+                players={gameState.activePlayers}
+                maxPlayers={10}
+              />
+            </div>
 
             {/* Cola de Espera */}
-            <WaitingQueue
-              players={gameState.nextInQueue ? [gameState.nextInQueue] : []}
-              queueLength={gameState.queueLength}
-            />
+            <div>
+              <WaitingQueue
+                players={gameState.nextInQueue ? [gameState.nextInQueue] : []}
+                queueLength={gameState.queueLength}
+              />
+            </div>
+
+            {/* Ultimos Ganadores */}
+            <div>
+              <RecentWinnersLive />
+            </div>
           </div>
         )}
       </div>

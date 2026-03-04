@@ -98,7 +98,10 @@
     "prize": "Premio",
     "pot": "Pozo",
     "spin": "Girar",
-    "gameHistory": "Historial de Juegos"
+    "gameHistory": "Historial de Juegos",
+    "recentWinners": "Últimos Ganadores",
+    "noWinnersYet": "No hay ganadores aún",
+    "winnersHelpText": "Los últimos 5 ganadores se muestran aquí. ¡Sé el próximo campeón!"
   },
   "errors": {
     "userNotFound": "Usuario no encontrado",

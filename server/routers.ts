@@ -8,6 +8,7 @@ import { spinProcedure, getSpinStateProcedure, getGameRoundsHistoryProcedure } f
 import { statsRouter } from "./statsRouter";
 import { bonusRouter } from "./bonusRouter";
 import { spectatorRouter } from "./spectatorRouter";
+import { winnersRouter } from "./winnersRouter";
 
 export const appRouter = router({
   system: systemRouter,
@@ -31,6 +32,7 @@ export const appRouter = router({
   stats: statsRouter,
   bonus: bonusRouter,
   spectator: spectatorRouter,
+  winners: winnersRouter,
 });
 
 export type AppRouter = typeof appRouter;
